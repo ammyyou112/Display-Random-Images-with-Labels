@@ -1,0 +1,81 @@
+import tensorflow.keras as keras
+import random
+import collections
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def display_random_images_with_labels(d, n=10):
+    """
+        accept dataset in tuple form, first index
+        is np arrays (images) and second is labels
+        and display n random images with labels
+        from it
+        Inputs:
+            d (tuple): dataset images, dataset labels on same indexs
+            n (int): number of samples to display (default: 10)
+        Output:
+            None
+    """
+    choices = list(range(len(d[0])))
+    for i in range(n):
+        index = random.choice(choices)
+        choices.remove(index)
+        print("Index:", index)
+        print("Label:", d[1][index])
+        plt.imshow(d[0][index], cmap='gray')
+        plt.show()
+
+
+# Loading dataset
+dataset = keras.datasets.mnist.load_data()
+
+# Reduce the dataset to 10% 
+new_dataset = ((dataset[0][0][:6000], dataset[0][1][:6000]), (dataset[1][0][:1000], dataset[1][1][:1000]))
+
+#Balancing the dataset for training and testing
+train_images, train_labels = [], []
+for label in range(10):
+    label_indices = np.where(new_dataset[0][1] == label)[0]
+    random_indices = np.random.choice(label_indices, size=600)
+    train_images.append(new_dataset[0][0][random_indices])
+    train_labels.append(new_dataset[0][1][random_indices])
+train_images = np.concatenate(train_images)
+train_labels = np.concatenate(train_labels)
+balanced_train_dataset = (train_images, train_labels)
+
+val_images, val_labels = [], []
+for label in range(10):
+    label_indices = np.where(new_dataset[1][1] == label)[0] 
+    random_indices = np.random.choice(label_indices, size=100) 
+    val_images.append(new_dataset[1][0][random_indices]) 
+    val_labels.append(new_dataset[1][1][random_indices])
+    
+val_images = np.concatenate(val_images)
+val_labels = np.concatenate(val_labels)
+balanced_val_dataset = (val_images, val_labels)
+
+print("There are", len(dataset[0][0]), "images in the original training dataset")
+print("There are", len(dataset[1][0]), "images in the original validation dataset")
+print("___________________\n\n")
+
+print("There are", len(balanced_train_dataset[0]), "images in the balanced training dataset")
+print("There are", len(balanced_val_dataset[0]), "images in the balanced validation dataset")
+print("___________________\n\n")
+
+print("Randomly printing 10 images with labels from the balanced training dataset")
+display_random_images_with_labels(balanced_train_dataset)
+print("___________________\n\n")
+print("Randomly printing 10 images with labels from the balanced validation dataset")
+display_random_images_with_labels(balanced_val_dataset)
+print("___________________\n\n")
+
+train_labels_counter = collections.Counter(balanced_train_dataset[1])
+val_labels_counter = collections.Counter(balanced_val_dataset[1])
+
+print("Breakdown of each label in the balanced training dataset is below (format: dict key is label, dict value is number of images for that label)")
+print(train_labels_counter)
+print("\n")
+
+print("Breakdown of each label in the balanced validation dataset is below (format: dict key is label, dict value is number of images for that label)")
+print(val_labels_counter)
